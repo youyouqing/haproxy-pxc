@@ -1,0 +1,64 @@
+nginx:
+ image: zhicongdai/lnmp_nginx
+ ports:
+  - "80:80"
+  - "443:443"
+ links:
+  - "phpfpm7"
+  - "phpfpm5"
+ volumes:
+  - ./www/html/:/var/www/html/
+  - ./nginx.conf:/etc/nginx/nginx.conf
+  - ./nginx.d/:/etc/nginx/conf.d/
+
+phpfpm7:
+ image: zhicongdai/lnmp_php7
+ ports:
+  - "9000:9000"
+ links:
+  - "mysql"
+  - "redis"
+ volumes:
+  - ./php.ini:/usr/local/etc/php/php.ini
+  - ./www/html/:/var/www/html/
+
+phpfpm5:
+ restart: always
+ image: registry.cn-shenzhen.aliyuncs.com/chenishr/php56
+ links:
+   - redis
+   - mysql
+ volumes:
+    - ./php.ini:/usr/local/etc/php/php.ini
+    - ./www/html:/var/www/html
+ ports:
+    - "9001:9000"
+mysql:
+ image: zhicongdai/lnmp_mysql
+ ports:
+  - "3306:3306"
+ environment:
+  MYSQL_ROOT_PASSWORD: daizhicong
+ #volumes:
+ #- ./mysql.cnf:/etc/mysql/my.cnf 
+
+redis:
+  image: zhicongdai/lnmp_redis
+  ports:
+    - "6379:6379"
+
+webcron:
+  restart: always
+  image: zhicongdai/webcron:v3
+  ports:
+    - "8888:8888"
+  links:
+    - "mysql"
+  volumes:
+    - ./webcron.app.conf:/root/go/src/github.com/lisijie/webcron/conf/app.conf
+  command: 
+    - "/bin/bash"
+    - "-c"
+    - "cd /root/go/src/github.com/lisijie/webcron && go build . && ./webcron"
+
+
